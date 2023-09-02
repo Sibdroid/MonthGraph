@@ -1,6 +1,6 @@
 import typing as t
 import calendar
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 class Month:
@@ -121,28 +121,45 @@ class Month:
                 f"not {type(neutral_color)}"
             )
         self._image = None
-        self.paint()
+        self._draw = None
+        self._set_canvas()
+        self._paint()
+        self._add_text()
+        self._save()
 
-    def paint(self):
-        self._image = Image.new("RGB", (780, 670), (255, 255, 255))
-        draw = ImageDraw.Draw(self._image)
-        coordinates = [10, 10]
+    def _set_canvas(self):
+        self._image = Image.new("RGB", (780, 750), (255, 255, 255))
+        self._draw = ImageDraw.Draw(self._image)
+
+    def _paint(self):
+        coordinates = [10, 90]
         count = 0
         for color in self._colors:
             if color is not None:
-                draw.rectangle((coordinates[0], coordinates[1],
-                                coordinates[0]+100, coordinates[1]+100),
-                               fill=color)
+                self._draw.rectangle((coordinates[0], coordinates[1],
+                                      coordinates[0]+100, coordinates[1]+100),
+                                     fill=color)
             else:
-                draw.rectangle((coordinates[0], coordinates[1],
-                                coordinates[0] + 100, coordinates[1] + 100),
-                               fill=self._neutral_color)
+                self._draw.rectangle((coordinates[0], coordinates[1],
+                                      coordinates[0] + 100,
+                                      coordinates[1] + 100),
+                                     fill=self._neutral_color)
             coordinates[0] += 110
             count += 1
             if count == 7:
                 coordinates[0] = 10
                 coordinates[1] += 110
                 count = 0
+
+    def _add_text(self):
+        font = ImageFont.truetype("Roboto-Thin.ttf", 30)
+        days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
+        x_coordinates = [25, 140, 250, 360, 480, 585, 690]
+        for day, x_coordinate in zip(days, x_coordinates):
+            self._draw.text((x_coordinate, 45),
+                            day, "black", font=font)
+
+    def _save(self):
         self._image.save("test.png")
 
 

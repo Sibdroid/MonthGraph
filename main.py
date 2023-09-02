@@ -128,11 +128,11 @@ class Month:
         self._save()
 
     def _set_canvas(self):
-        self._image = Image.new("RGB", (780, 750), (255, 255, 255))
+        self._image = Image.new("RGB", (780, 720), (255, 255, 255))
         self._draw = ImageDraw.Draw(self._image)
 
     def _paint(self):
-        coordinates = [10, 90]
+        coordinates = [10, 60]
         count = 0
         for color in self._colors:
             if color is not None:
@@ -156,7 +156,7 @@ class Month:
         days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
         for day, x_coordinate in zip(days, x_coordinates):
-            self._draw.text((x_coordinate, 45),
+            self._draw.text((x_coordinate, 15),
                             day, "black", font=font)
 
     def _save(self):

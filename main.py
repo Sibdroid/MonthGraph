@@ -62,8 +62,6 @@ class Month:
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
         """
-        COLORS_PROVIDED = False
-        VALUES_PROVIDED = False
         if isinstance(month, str):
             month_dict = {"January": 1,
                           "February": 2,
@@ -136,10 +134,19 @@ class Month:
         self._neutral_color = neutral_color
         self._image = None
         self._draw = None
-        #self._set_canvas()
+        if self._colors is None:
+            self._values_to_colors()
+        print(self._colors)
+        self._set_canvas()
         #self._paint()
         #self._add_text()
         #self._save()
+
+    def _values_to_colors(self):
+        self._colors = []
+        slope = 1/(max(self._values)-min(self._values))
+        for value in self._values:
+            self._colors += [slope*(value-min(self._values))]
 
     def _set_canvas(self):
         self._image = Image.new("RGB", (780, 720), (255, 255, 255))

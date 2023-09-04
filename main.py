@@ -1,6 +1,23 @@
 import typing as t
+import warnings
 import calendar
+import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
+
+
+def get_colors_and_values(data: t.Union[pd.DataFrame, None],
+                          colors: t.Union[list[str], None],
+                          values: t.Union[list[float], None]):
+    if isinstance(data, pd.DataFrame):
+        if "colors" in data.columns:
+            return data["colors"].tolist(), None
+        elif "values" in data.columns:
+            return None, data["values"].tolist()
+    if isinstance(colors, list):
+        return colors, None
+    if isinstance(values, list):
+        return None, values
+    return None, None
 
 
 class Month:
@@ -8,7 +25,10 @@ class Month:
     def __init__(self,
                  month: t.Union[int, str],
                  year: int,
-                 colors: list[str],
+                 data: t.Union[pd.DataFrame, None]=None,
+                 colors: t.Union[list[str], None]=None,
+                 values: t.Union[list[float], None]=None,
+                 colormap: str = "viridis",
                  neutral_color: str="#EEEEEE") -> None:
         """Initializes an object of type 'Month'.
 
@@ -42,6 +62,8 @@ class Month:
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
         """
+        COLORS_PROVIDED = False
+        VALUES_PROVIDED = False
         if isinstance(month, str):
             month_dict = {"January": 1,
                           "February": 2,
@@ -104,28 +126,20 @@ class Month:
             )
         self._starting_day, self._day_count = calendar.monthrange(self._year,
                                                                   self._month)
-        if len(colors) == self._day_count:
-            self._colors = colors
-            self._colors = [None]*self._starting_day + self._colors
-            self._colors += [None]*(42-len(self._colors))
-        else:
+        self._colors, self._values = get_colors_and_values(data, colors, values)
+        if self._colors is None and self._values is None:
             raise ValueError(
-                f"The amount of colors ({len(colors)}) "
-                f"has to be equal to the amount of days ({self._day_count})"
+                "Neither colors nor values found: please, provide them as "
+                "columns of 'data' or separate respective arguments"
             )
-        if isinstance(neutral_color, str):
-            self._neutral_color = neutral_color
-        else:
-            raise TypeError(
-                f"neutral_color has to be given as a str, "
-                f"not {type(neutral_color)}"
-            )
+        self._colormap = colormap
+        self._neutral_color = neutral_color
         self._image = None
         self._draw = None
-        self._set_canvas()
-        self._paint()
-        self._add_text()
-        self._save()
+        #self._set_canvas()
+        #self._paint()
+        #self._add_text()
+        #self._save()
 
     def _set_canvas(self):
         self._image = Image.new("RGB", (780, 720), (255, 255, 255))
@@ -164,7 +178,8 @@ class Month:
 
 
 def main():
-    month = Month(9, 2023, ["#FCB1A6"]*30)
+    df = pd.DataFrame({"values": [1, 2, 3]})
+    month = Month(9, 2023, df)
 
 
 if __name__ == "__main__":

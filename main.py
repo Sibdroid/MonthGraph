@@ -1,8 +1,9 @@
 import typing as t
-import warnings
 import calendar
+import matplotlib as mpl
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
+from random import randint
 
 
 def get_colors_and_values(data: t.Union[pd.DataFrame, None],
@@ -130,23 +131,30 @@ class Month:
                 "Neither colors nor values found: please, provide them as "
                 "columns of 'data' or separate respective arguments"
             )
-        self._colormap = colormap
+        try:
+            self._colormap = mpl.colormaps[colormap]
+        except KeyError:
+            raise ValueError(
+                f"'{colormap}' is not a supported colormap"
+            )
         self._neutral_color = neutral_color
         self._image = None
         self._draw = None
         if self._colors is None:
             self._values_to_colors()
-        print(self._colors)
         self._set_canvas()
-        #self._paint()
-        #self._add_text()
-        #self._save()
+        self._paint()
+        self._add_text()
+        self._save()
 
     def _values_to_colors(self):
         self._colors = []
         slope = 1/(max(self._values)-min(self._values))
         for value in self._values:
-            self._colors += [slope*(value-min(self._values))]
+            ranged_value = slope*(value-min(self._values))
+            color = self._colormap(ranged_value)
+            color = tuple([int(round(i*255, 0)) for i in list(color)[:-1]])
+            self._colors += [color]
 
     def _set_canvas(self):
         self._image = Image.new("RGB", (780, 720), (255, 255, 255))
@@ -185,7 +193,7 @@ class Month:
 
 
 def main():
-    df = pd.DataFrame({"values": [1, 2, 3]})
+    df = pd.DataFrame({"values": [randint(1, 100) for i in range(30)]})
     month = Month(9, 2023, df)
 
 

@@ -142,6 +142,14 @@ class Month:
         self._draw = None
         if self._colors is None:
             self._values_to_colors()
+        if len(self._colors) == self._day_count:
+            self._colors = [None]*self._starting_day + self._colors
+            self._colors += [None]*(42-len(self._colors))
+        else:
+            raise ValueError(
+                f"The amount of colors ({len(colors)}) "
+                f"has to be equal to the amount of days ({self._day_count})"
+            )
         self._set_canvas()
         self._paint()
         self._add_text()

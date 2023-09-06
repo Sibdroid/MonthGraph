@@ -5,7 +5,8 @@ import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 from random import randint
 from checks import check_type
-
+MONTHS = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"]
 
 def get_colors_and_values(data: t.Union[pd.DataFrame, None],
                           colors: t.Union[list[str], None],
@@ -154,7 +155,7 @@ class Month:
             self._colors += [None] * (42 - len(self._colors))
         else:
             raise ValueError(
-                f"The amount of colors ({len(colors)}) "
+                f"The amount of colors ({len(self._colors)}) "
                 f"has to be equal to the amount of days ({self._day_count})"
             )
         self._set_canvas()
@@ -172,11 +173,11 @@ class Month:
             self._colors += [color]
 
     def _set_canvas(self):
-        self._image = Image.new("RGB", (780, 720), (255, 255, 255))
+        self._image = Image.new("RGB", (780, 800), (255, 255, 255))
         self._draw = ImageDraw.Draw(self._image)
 
     def _paint(self):
-        coordinates = [10, 60]
+        coordinates = [10, 140]
         count = 0
         for color in self._colors:
             if color is not None:
@@ -197,20 +198,25 @@ class Month:
                 count = 0
 
     def _add_text(self):
-        font = ImageFont.truetype("Roboto-Thin.ttf", 30)
+        font_months = ImageFont.truetype("Roboto-Thin.ttf", 30)
         days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
         for day, x_coordinate in zip(days, x_coordinates):
-            self._draw.text((x_coordinate, 15),
-                            day, "black", font=font)
+            self._draw.text((x_coordinate, 95),
+                            day, "black", font=font_months)
+        font_title = ImageFont.truetype("Roboto-Thin.ttf", 45)
+        title = f"{MONTHS[self._month]} {self._year}"
+        self._draw.text((250, 25), title, "black", font=font_title)
 
     def _save(self):
         self._image.save("test.png")
 
 
 def main():
-    df = pd.DataFrame({"values": [randint(1, 100) for i in range(30)]})
-    month = Month(9, 2023, df)
+    df = pd.DataFrame({"values": [21, 0, 29, 35, 0, 32, 28, 13, 0, 27, 0, 23,
+                                  18, 28, 25, 0, 17, 27, 19, 0, 26, 23, 22,
+                                  0, 25, 25, 19, 30, 18, 0, 0]})
+    month = Month(1, 2023, df, colormap = "viridis")
 
 
 if __name__ == "__main__":

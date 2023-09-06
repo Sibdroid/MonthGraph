@@ -4,6 +4,7 @@ import matplotlib as mpl
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 from random import randint
+from checks import check_type
 
 
 def get_colors_and_values(data: t.Union[pd.DataFrame, None],
@@ -26,11 +27,11 @@ class Month:
     def __init__(self,
                  month: t.Union[int, str],
                  year: int,
-                 data: t.Union[pd.DataFrame, None]=None,
-                 colors: t.Union[list[str], None]=None,
-                 values: t.Union[list[float], None]=None,
+                 data: t.Union[pd.DataFrame, None] = None,
+                 colors: t.Union[list[str], None] = None,
+                 values: t.Union[list[float], None] = None,
                  colormap: str = "viridis",
-                 neutral_color: str="#EEEEEE") -> None:
+                 neutral_color: str = "#EEEEEE") -> None:
         """Initializes an object of type 'Month'.
 
         Args:
@@ -51,15 +52,19 @@ class Month:
             colors (str). A list of colors, each represented as a hex value.
             neutral_color (str). The color used for days outside the month.
         Raises:
-            ValueError: in four cases.
+            ValueError: in five cases.
                 1) If month is given as a str, but it is not one of the
                    supported month names.
                 2) If month is given as an int, but it is outside [0; 11] range.
                 3) If year is outside the [0: 99] range and is not greater than
                    or equal to 1000.
-                4) If the amount of colors is not equal to the amount of
+                4) If neither colors nor values have been found in either
+                   data or respective arguments.
+                5) If the amount of colors is not equal to the amount of
                    days in the month.
-            TypeError:
+            KeyError: in one case.
+                1) If the colormap provided is not support.
+            TypeError: in two cases.
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
         """
@@ -110,7 +115,7 @@ class Month:
             )
         if isinstance(year, int):
             if 0 <= year <= 99:
-                self._year = 2000+year
+                self._year = 2000 + year
             elif year >= 1000:
                 self._year = year
             else:
@@ -131,20 +136,22 @@ class Month:
                 "Neither colors nor values found: please, provide them as "
                 "columns of 'data' or separate respective arguments"
             )
+        check_type(colormap, "colormap", str)
         try:
             self._colormap = mpl.colormaps[colormap]
         except KeyError:
-            raise ValueError(
+            raise KeyError(
                 f"'{colormap}' is not a supported colormap"
             )
+        check_type(neutral_color, "neutral_color", str)
         self._neutral_color = neutral_color
         self._image = None
         self._draw = None
         if self._colors is None:
             self._values_to_colors()
         if len(self._colors) == self._day_count:
-            self._colors = [None]*self._starting_day + self._colors
-            self._colors += [None]*(42-len(self._colors))
+            self._colors = [None] * self._starting_day + self._colors
+            self._colors += [None] * (42 - len(self._colors))
         else:
             raise ValueError(
                 f"The amount of colors ({len(colors)}) "
@@ -157,11 +164,11 @@ class Month:
 
     def _values_to_colors(self):
         self._colors = []
-        slope = 1/(max(self._values)-min(self._values))
+        slope = 1 / (max(self._values) - min(self._values))
         for value in self._values:
-            ranged_value = slope*(value-min(self._values))
+            ranged_value = slope * (value - min(self._values))
             color = self._colormap(ranged_value)
-            color = tuple([int(round(i*255, 0)) for i in list(color)[:-1]])
+            color = tuple([int(round(i * 255, 0)) for i in list(color)[:-1]])
             self._colors += [color]
 
     def _set_canvas(self):
@@ -174,7 +181,8 @@ class Month:
         for color in self._colors:
             if color is not None:
                 self._draw.rectangle((coordinates[0], coordinates[1],
-                                      coordinates[0]+100, coordinates[1]+100),
+                                      coordinates[0] + 100,
+                                      coordinates[1] + 100),
                                      fill=color)
             else:
                 self._draw.rectangle((coordinates[0], coordinates[1],

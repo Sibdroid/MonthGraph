@@ -1,6 +1,26 @@
 import typing as t
 import calendar
+import matplotlib as mpl
+import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
+from random import randint
+from checks import check_type
+MONTHS = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"]
+
+def get_colors_and_values(data: t.Union[pd.DataFrame, None],
+                          colors: t.Union[list[str], None],
+                          values: t.Union[list[float], None]):
+    if isinstance(data, pd.DataFrame):
+        if "colors" in data.columns:
+            return data["colors"].tolist(), None
+        elif "values" in data.columns:
+            return None, data["values"].tolist()
+    if isinstance(colors, list):
+        return colors, None
+    if isinstance(values, list):
+        return None, values
+    return None, None
 
 
 class Month:
@@ -8,8 +28,11 @@ class Month:
     def __init__(self,
                  month: t.Union[int, str],
                  year: int,
-                 colors: list[str],
-                 neutral_color: str="#EEEEEE") -> None:
+                 data: t.Union[pd.DataFrame, None] = None,
+                 colors: t.Union[list[str], None] = None,
+                 values: t.Union[list[float], None] = None,
+                 colormap: str = "viridis",
+                 neutral_color: str = "#EEEEEE") -> None:
         """Initializes an object of type 'Month'.
 
         Args:
@@ -30,15 +53,19 @@ class Month:
             colors (str). A list of colors, each represented as a hex value.
             neutral_color (str). The color used for days outside the month.
         Raises:
-            ValueError: in four cases.
+            ValueError: in five cases.
                 1) If month is given as a str, but it is not one of the
                    supported month names.
                 2) If month is given as an int, but it is outside [0; 11] range.
                 3) If year is outside the [0: 99] range and is not greater than
                    or equal to 1000.
-                4) If the amount of colors is not equal to the amount of
+                4) If neither colors nor values have been found in either
+                   data or respective arguments.
+                5) If the amount of colors is not equal to the amount of
                    days in the month.
-            TypeError:
+            KeyError: in one case.
+                1) If the colormap provided is not support.
+            TypeError: in two cases.
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
         """
@@ -89,7 +116,7 @@ class Month:
             )
         if isinstance(year, int):
             if 0 <= year <= 99:
-                self._year = 2000+year
+                self._year = 2000 + year
             elif year >= 1000:
                 self._year = year
             else:
@@ -104,40 +131,60 @@ class Month:
             )
         self._starting_day, self._day_count = calendar.monthrange(self._year,
                                                                   self._month)
-        if len(colors) == self._day_count:
-            self._colors = colors
-            self._colors = [None]*self._starting_day + self._colors
-            self._colors += [None]*(42-len(self._colors))
-        else:
+        self._colors, self._values = get_colors_and_values(data, colors, values)
+        if self._colors is None and self._values is None:
             raise ValueError(
-                f"The amount of colors ({len(colors)}) "
-                f"has to be equal to the amount of days ({self._day_count})"
+                "Neither colors nor values found: please, provide them as "
+                "columns of 'data' or separate respective arguments"
             )
-        if isinstance(neutral_color, str):
-            self._neutral_color = neutral_color
-        else:
-            raise TypeError(
-                f"neutral_color has to be given as a str, "
-                f"not {type(neutral_color)}"
+        check_type(colormap, "colormap", str)
+        try:
+            self._colormap = mpl.colormaps[colormap]
+        except KeyError:
+            raise KeyError(
+                f"'{colormap}' is not a supported colormap"
             )
+        check_type(neutral_color, "neutral_color", str)
+        self._neutral_color = neutral_color
         self._image = None
         self._draw = None
+        if self._colors is None:
+            self._values_to_colors()
+        if len(self._colors) == self._day_count:
+            self._colors = [None] * self._starting_day + self._colors
+            self._colors += [None] * (42 - len(self._colors))
+        else:
+            raise ValueError(
+                f"The amount of colors ({len(self._colors)}) "
+                f"has to be equal to the amount of days ({self._day_count})"
+            )
         self._set_canvas()
         self._paint()
-        self._add_text()
+        self._add_text_months()
+        self._add_text_title()
         self._save()
 
+    def _values_to_colors(self):
+        self._colors = []
+        slope = 1 / (max(self._values) - min(self._values))
+        for value in self._values:
+            ranged_value = slope * (value - min(self._values))
+            color = self._colormap(ranged_value)
+            color = tuple([int(round(i * 255, 0)) for i in list(color)[:-1]])
+            self._colors += [color]
+
     def _set_canvas(self):
-        self._image = Image.new("RGB", (780, 720), (255, 255, 255))
+        self._image = Image.new("RGB", (780, 800), (255, 255, 255))
         self._draw = ImageDraw.Draw(self._image)
 
     def _paint(self):
-        coordinates = [10, 60]
+        coordinates = [10, 140]
         count = 0
         for color in self._colors:
             if color is not None:
                 self._draw.rectangle((coordinates[0], coordinates[1],
-                                      coordinates[0]+100, coordinates[1]+100),
+                                      coordinates[0] + 100,
+                                      coordinates[1] + 100),
                                      fill=color)
             else:
                 self._draw.rectangle((coordinates[0], coordinates[1],
@@ -151,20 +198,27 @@ class Month:
                 coordinates[1] += 110
                 count = 0
 
-    def _add_text(self):
+    def _add_text_months(self):
         font = ImageFont.truetype("Roboto-Thin.ttf", 30)
         days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
         for day, x_coordinate in zip(days, x_coordinates):
-            self._draw.text((x_coordinate, 15),
+            self._draw.text((x_coordinate, 95),
                             day, "black", font=font)
 
+    def _add_text_title(self):
+        font = ImageFont.truetype("Roboto-Thin.ttf", 45)
+        month = MONTHS[self._month-1]
+        title = f"{month} {self._year}"
+        self._draw.text((300-10*(len(month)-3), 25), title, "black", font=font)
+
     def _save(self):
-        self._image.save("test.png")
+        self._image.save(f"test.png")
 
 
 def main():
-    month = Month(9, 2023, ["#FCB1A6"]*30)
+    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(31)]})
+    month = Month(1, 2023, df, colormap = "viridis")
 
 
 if __name__ == "__main__":

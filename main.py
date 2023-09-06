@@ -160,7 +160,8 @@ class Month:
             )
         self._set_canvas()
         self._paint()
-        self._add_text()
+        self._add_text_months()
+        self._add_text_title()
         self._save()
 
     def _values_to_colors(self):
@@ -197,25 +198,26 @@ class Month:
                 coordinates[1] += 110
                 count = 0
 
-    def _add_text(self):
-        font_months = ImageFont.truetype("Roboto-Thin.ttf", 30)
+    def _add_text_months(self):
+        font = ImageFont.truetype("Roboto-Thin.ttf", 30)
         days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
         for day, x_coordinate in zip(days, x_coordinates):
             self._draw.text((x_coordinate, 95),
-                            day, "black", font=font_months)
-        font_title = ImageFont.truetype("Roboto-Thin.ttf", 45)
-        title = f"{MONTHS[self._month]} {self._year}"
-        self._draw.text((250, 25), title, "black", font=font_title)
+                            day, "black", font=font)
+
+    def _add_text_title(self):
+        font = ImageFont.truetype("Roboto-Thin.ttf", 45)
+        month = MONTHS[self._month-1]
+        title = f"{month} {self._year}"
+        self._draw.text((300-10*(len(month)-3), 25), title, "black", font=font)
 
     def _save(self):
-        self._image.save("test.png")
+        self._image.save(f"test.png")
 
 
 def main():
-    df = pd.DataFrame({"values": [21, 0, 29, 35, 0, 32, 28, 13, 0, 27, 0, 23,
-                                  18, 28, 25, 0, 17, 27, 19, 0, 26, 23, 22,
-                                  0, 25, 25, 19, 30, 18, 0, 0]})
+    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(31)]})
     month = Month(1, 2023, df, colormap = "viridis")
 
 

@@ -10,7 +10,8 @@ MONTHS = ["January", "February", "March", "April", "May", "June",
 
 def get_colors_and_values(data: t.Union[pd.DataFrame, None],
                           colors: t.Union[list[str], None],
-                          values: t.Union[list[float], None]):
+                          values: t.Union[list[float], None]
+                          ) -> tuple[t.Union[list, None], t.Union[list, None]]:
     if isinstance(data, pd.DataFrame):
         if "colors" in data.columns:
             return data["colors"].tolist(), None
@@ -21,6 +22,13 @@ def get_colors_and_values(data: t.Union[pd.DataFrame, None],
     if isinstance(values, list):
         return None, values
     return None, None
+
+
+def background_to_color(color: tuple[int, int, int]) -> str:
+    red, green, blue = color
+    if red*0.299 + green*0.587 + blue*0.114 > 186:
+        return "#000000"
+    return "#ffffff"
 
 
 class Month:
@@ -153,6 +161,8 @@ class Month:
         if len(self._colors) == self._day_count:
             self._colors = [None] * self._starting_day + self._colors
             self._colors += [None] * (42 - len(self._colors))
+            self._values = [None] * self._starting_day + self._values
+            self._values += [None] * (42 - len(self._values))
         else:
             raise ValueError(
                 f"The amount of colors ({len(self._colors)}) "
@@ -160,6 +170,8 @@ class Month:
             )
         self._set_canvas()
         self._paint()
+        if self._values is not None:
+            self._add_text_annotation()
         self._add_text_months()
         self._add_text_title()
         self._save()
@@ -191,6 +203,23 @@ class Month:
                                       coordinates[0] + 100,
                                       coordinates[1] + 100),
                                      fill=self._neutral_color)
+            coordinates[0] += 110
+            count += 1
+            if count == 7:
+                coordinates[0] = 10
+                coordinates[1] += 110
+                count = 0
+
+    def _add_text_annotation(self):
+        font = ImageFont.truetype("Roboto-Thin.ttf", 30)
+        coordinates = [10, 140]
+        count = 0
+        for value, color in zip(self._values, self._colors):
+            print(color)
+            if value is not None:
+                self._draw.text((coordinates[0]+40, coordinates[1]+40),
+                                f"{value}", background_to_color(color),
+                                font=font)
             coordinates[0] += 110
             count += 1
             if count == 7:

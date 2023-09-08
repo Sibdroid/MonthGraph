@@ -31,6 +31,23 @@ def background_to_color(color: tuple[int, int, int]) -> str:
     return "#ffffff"
 
 
+def get_text_dimensions(font: ImageFont.FreeTypeFont,
+                        text: str) -> tuple[float, float]:
+    ascent, descent = font.getmetrics()
+    width = font.getmask(text).getbbox()[2]
+    height = font.getmask(text).getbbox()[3] + descent
+    return width, height
+
+
+def get_text_coordinates(text_width: float,
+                         text_height: float,
+                         box_x: int,
+                         box_y: int,
+                         box_width: int,
+                         box_height: int) -> tuple[float, float]:
+    return (box_x+(box_width-text_width)/2,
+            box_y+(box_height-text_height)/2)
+
 class Month:
 
     def __init__(self,
@@ -215,9 +232,14 @@ class Month:
         coordinates = [10, 140]
         count = 0
         for value, color in zip(self._values, self._colors):
-            print(color)
             if value is not None:
-                self._draw.text((coordinates[0]+40, coordinates[1]+40),
+                width, height = get_text_dimensions(font, f"{value}")
+                new_coordinates = get_text_coordinates(width, height,
+                                                       coordinates[0],
+                                                       coordinates[1],
+                                                       100, 100)
+                self._draw.text((int(new_coordinates[0]),
+                                 int(new_coordinates[1])),
                                 f"{value}", background_to_color(color),
                                 font=font)
             coordinates[0] += 110

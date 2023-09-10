@@ -1,4 +1,5 @@
 import typing as t
+import os
 import calendar
 import matplotlib as mpl
 import pandas as pd
@@ -57,6 +58,7 @@ class Month:
                  colors: t.Union[list[str], None] = None,
                  values: t.Union[list[float], None] = None,
                  colormap: str = "viridis",
+                 font: str = "Roboto-Thin",
                  neutral_color: str = "#EEEEEE") -> None:
         """Initializes an object of type 'Month'.
 
@@ -169,6 +171,11 @@ class Month:
             raise KeyError(
                 f"'{colormap}' is not a supported colormap"
             )
+        check_type(font, "font", str)
+        if os.path.exists(f"fonts/{font}.ttf"):
+            self._font_path = f"fonts/{font}.ttf"
+        else:
+            raise ValueError(f"{font} is not a supported font")
         check_type(neutral_color, "neutral_color", str)
         self._neutral_color = neutral_color
         self._image = None
@@ -192,6 +199,7 @@ class Month:
         self._add_text_months()
         self._add_text_title()
         self._save()
+
 
     def _values_to_colors(self):
         self._colors = []
@@ -228,7 +236,7 @@ class Month:
                 count = 0
 
     def _add_text_annotation(self):
-        font = ImageFont.truetype("Roboto-Thin.ttf", 30)
+        font = ImageFont.truetype(self._font_path, 30)
         coordinates = [10, 140]
         count = 0
         for value, color in zip(self._values, self._colors):
@@ -250,7 +258,7 @@ class Month:
                 count = 0
 
     def _add_text_months(self):
-        font = ImageFont.truetype("Roboto-Thin.ttf", 30)
+        font = ImageFont.truetype(self._font_path, 30)
         days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
         for day, x_coordinate in zip(days, x_coordinates):
@@ -258,7 +266,7 @@ class Month:
                             day, "black", font=font)
 
     def _add_text_title(self):
-        font = ImageFont.truetype("Roboto-Thin.ttf", 45)
+        font = ImageFont.truetype(self._font_path, 45)
         month = MONTHS[self._month-1]
         title = f"{month} {self._year}"
         self._draw.text((300-10*(len(month)-3), 25), title, "black", font=font)

@@ -3,9 +3,8 @@ import os
 import calendar
 import matplotlib as mpl
 import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 from random import randint
-from checks import check_type
 MONTHS = ["January", "February", "March", "April", "May", "June",
           "July", "August", "September", "October", "November", "December"]
 
@@ -13,19 +12,34 @@ def get_colors_and_values(data: t.Union[pd.DataFrame, None],
                           colors: t.Union[list[str], None],
                           values: t.Union[list[float], None]
                           ) -> tuple[t.Union[list, None], t.Union[list, None]]:
+    """Accesses colors and values from a DataFrame or respective arguments.
+
+    Args:
+        data (pd.DataFrame | None). May or may not contain 'colors'
+            and 'values' arguments.
+        colors (list[str] | None).
+        values (list[float] | None).
+
+    Returns:
+        A tuple of colors (list[str] | None) and values (list[str] | None).
+    """
+    new_colors = None
+    new_values = None
     if isinstance(data, pd.DataFrame):
         if "colors" in data.columns:
-            return data["colors"].tolist(), None
+            new_colors = data["colors"].tolist()
         elif "values" in data.columns:
-            return None, data["values"].tolist()
-    if isinstance(colors, list):
-        return colors, None
-    if isinstance(values, list):
-        return None, values
-    return None, None
+            new_values = data["values"].tolist()
+    if isinstance(colors, list) and new_colors is None:
+        new_colors = colors
+    if isinstance(values, list) and new_values is None:
+        new_values = values
+    return new_colors, new_values
 
 
-def background_to_color(color: tuple[int, int, int]) -> str:
+def background_to_color(color: t.Union[tuple[int, int, int], str]) -> str:
+    if isinstance(color, str):
+        color = ImageColor.getcolor(color, "RGB")
     red, green, blue = color
     if red*0.299 + green*0.587 + blue*0.114 > 186:
         return "#000000"
@@ -164,19 +178,16 @@ class Month:
                 "Neither colors nor values found: please, provide them as "
                 "columns of 'data' or separate respective arguments"
             )
-        check_type(colormap, "colormap", str)
         try:
             self._colormap = mpl.colormaps[colormap]
         except KeyError:
             raise KeyError(
                 f"'{colormap}' is not a supported colormap"
             )
-        check_type(font, "font", str)
         if os.path.exists(f"fonts/{font}.ttf"):
             self._font_path = f"fonts/{font}.ttf"
         else:
             raise ValueError(f"{font} is not a supported font")
-        check_type(neutral_color, "neutral_color", str)
         self._neutral_color = neutral_color
         self._image = None
         self._draw = None
@@ -185,8 +196,9 @@ class Month:
         if len(self._colors) == self._day_count:
             self._colors = [None] * self._starting_day + self._colors
             self._colors += [None] * (42 - len(self._colors))
-            self._values = [None] * self._starting_day + self._values
-            self._values += [None] * (42 - len(self._values))
+            if self._values is not None:
+                self._values = [None] * self._starting_day + self._values
+                self._values += [None] * (42 - len(self._values))
         else:
             raise ValueError(
                 f"The amount of colors ({len(self._colors)}) "
@@ -276,8 +288,17 @@ class Month:
 
 
 def main():
-    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(31)]})
-    month = Month(1, 2023, df, colormap = "viridis")
+    df = pd.DataFrame({"colors": ['#083c3d', '#824666', '#6b6360', '#fdb02b',
+                      '#30da9b', '#3b8a4d', '#0896df', '#97d9b6', '#fe0ed7',
+                      '#53f3df', '#29ee15', '#f77994', '#77f071', '#5f0e9a',
+                      '#f3a214', '#0b0a24', '#62990c', '#69a0c9', '#bdbc08',
+                      '#45eeff', '#c606f3', '#3baaba', '#7e1386', '#ed07c5',
+                      '#a4a2f2', '#ec4c36', '#a34a88', '#be9973', '#e20ea3',
+                      '#685afe', '#d24c6c']})
+    values = [randint(1, 10) for _ in range(31)]
+    month = Month(1, 2023, df, colormap = "viridis",
+                  values = values)
+    print(values)
 
 
 if __name__ == "__main__":

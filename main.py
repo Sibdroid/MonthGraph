@@ -37,7 +37,17 @@ def get_colors_and_values(data: t.Union[pd.DataFrame, None],
     return new_colors, new_values
 
 
-def background_to_color(color: t.Union[tuple[int, int, int], str]) -> str:
+def background_to_color(color: t.Union[tuple[int, int, int], str]
+                        ) -> t.Literal["#000000", "#ffffff"]:
+    """Returns the text color (black or white) based on the background color.
+
+    Args:
+        color (tuple[int, int, int] | str): the color. If given as a tuple
+            of ints, they should be in [0, 255] range.
+
+    Returns:
+        '#000000' (black) or '#ffffff' (white).
+    """
     if isinstance(color, str):
         color = ImageColor.getcolor(color, "RGB")
     red, green, blue = color
@@ -48,6 +58,15 @@ def background_to_color(color: t.Union[tuple[int, int, int], str]) -> str:
 
 def get_text_dimensions(font: ImageFont.FreeTypeFont,
                         text: str) -> tuple[float, float]:
+    """Calculates text's width and height given a font.
+
+    Args:
+        font (ImageFont.FreeTypeFont).
+        text (str).
+
+    Returns:
+        The width and height of the text.
+    """
     ascent, descent = font.getmetrics()
     width = font.getmask(text).getbbox()[2]
     height = font.getmask(text).getbbox()[3] + descent
@@ -60,6 +79,19 @@ def get_text_coordinates(text_width: float,
                          box_y: int,
                          box_width: int,
                          box_height: int) -> tuple[float, float]:
+    """Calculates the text's coordinates to fit in the centre of the box.
+
+    Args:
+        text_width (float).
+        text_height (float).
+        box_x (int): the starting x-coordinate of the box.
+        box_y (int): the starting y-coordinate of the box.
+        box_width (int).
+        box_height (int).
+
+    Returns:
+        The required coordinates (top-left corner) of the text.
+    """
     return (box_x+(box_width-text_width)/2,
             box_y+(box_height-text_height)/2)
 

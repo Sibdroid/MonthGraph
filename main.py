@@ -100,16 +100,16 @@ class Month:
     def __init__(self,
                  month: t.Union[int, str],
                  year: int,
-                 data: t.Union[pd.DataFrame, None] = None,
-                 colors: t.Union[list[str], None] = None,
-                 values: t.Union[list[float], None] = None,
+                 data: t.Optional[pd.DataFrame] = None,
+                 colors: t.Optional[list[str]] = None,
+                 values: t.Optional[list[float]] = None,
                  colormap: str = "viridis",
                  font: str = "Roboto-Thin",
                  neutral_color: str = "#EEEEEE") -> None:
         """Initializes an object of type 'Month'.
 
         Args:
-            month (t.Union[int, str]). Can be given in three ways:
+            month (int | str). Can be given in three ways:
                 1) an int in [1, 12] range, where 1 is January
                    and 12 is December.
                 2) a str representing a usual month name:
@@ -121,12 +121,25 @@ class Month:
                    'Sep', 'Sept', 'Oct', 'Nov' or 'Dec'. Note two versions
                    for September can be used interchangeably.
             year (int). An int in [0:99] or greater than or equal to 1000.
-                Converted to2000+year in former case,
-                parsed as is in latter case.
-            colors (str). A list of colors, each represented as a hex value.
+                Converted to 2000+year in former case,
+                parsed as-is in latter case.
+            data (pd.DataFrame | None). Either a DataFrame that preferably
+                has either of the two columns: 'colors' and 'values' (or both),
+                or None. Defaults to None. If provided, 'colors' and 'values'
+                take precedence over the respective arguments.
+            colors (str | None). A list of colors,
+                each represented as a hex value, or None. Defaults to None.
+            values (float | None). A list of values, or None. Defaults to None.
+            colormap (str). A colormap used to convert values to colors.
+                Does not matter if the colors are already provided.
+                Defaults to 'viridis'.
+            font (str). The name of the font used for the text.
+                Defaults to 'Roboto-Thin'.
             neutral_color (str). The color used for days outside the month.
+                Defaults to '#EEEEEE', that is, a light gray.
+
         Raises:
-            ValueError: in five cases.
+            ValueError: in seven cases.
                 1) If month is given as a str, but it is not one of the
                    supported month names.
                 2) If month is given as an int, but it is outside [0; 11] range.
@@ -134,10 +147,10 @@ class Month:
                    or equal to 1000.
                 4) If neither colors nor values have been found in either
                    data or respective arguments.
-                5) If the amount of colors is not equal to the amount of
+                5) If the colormap provided is not supported.
+                6) If the font provided is not supported.
+                7) If the amount of colors is not equal to the amount of
                    days in the month.
-            KeyError: in one case.
-                1) If the colormap provided is not support.
             TypeError: in two cases.
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
@@ -213,7 +226,7 @@ class Month:
         try:
             self._colormap = mpl.colormaps[colormap]
         except KeyError:
-            raise KeyError(
+            raise ValueError(
                 f"'{colormap}' is not a supported colormap"
             )
         if os.path.exists(f"fonts/{font}.ttf"):
@@ -320,17 +333,8 @@ class Month:
 
 
 def main():
-    df = pd.DataFrame({"colors": ['#083c3d', '#824666', '#6b6360', '#fdb02b',
-                      '#30da9b', '#3b8a4d', '#0896df', '#97d9b6', '#fe0ed7',
-                      '#53f3df', '#29ee15', '#f77994', '#77f071', '#5f0e9a',
-                      '#f3a214', '#0b0a24', '#62990c', '#69a0c9', '#bdbc08',
-                      '#45eeff', '#c606f3', '#3baaba', '#7e1386', '#ed07c5',
-                      '#a4a2f2', '#ec4c36', '#a34a88', '#be9973', '#e20ea3',
-                      '#685afe', '#d24c6c']})
-    values = [randint(1, 10) for _ in range(31)]
-    month = Month(1, 2023, df, colormap = "viridis",
-                  values = values)
-    print(values)
+    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(31)]})
+    month = Month(1, 2023, df, colormap = "viridis")
 
 
 if __name__ == "__main__":

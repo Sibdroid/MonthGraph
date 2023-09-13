@@ -5,6 +5,7 @@ import matplotlib as mpl
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 from random import randint
+from pprint import pformat
 MONTHS = ["January", "February", "March", "April", "May", "June",
           "July", "August", "September", "October", "November", "December"]
 
@@ -155,6 +156,7 @@ class Month:
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
         """
+        self._locals = locals()
         if isinstance(month, str):
             month_dict = {"January": 1,
                           "February": 2,
@@ -331,10 +333,33 @@ class Month:
     def _save(self):
         self._image.save(f"test.png")
 
+    def __repr__(self):
+        string = "Month("
+        for argument in self._locals:
+            if argument != "self":
+                value = self._locals[argument]
+                if isinstance(value, pd.DataFrame):
+                    header = f"pd.DataFrame("
+                    for j in value.columns:
+                        header += f"{{'{j}': {value[j].tolist()}}})"
+                elif isinstance(value, str):
+                    header = f"'{value}'"
+                else:
+                    header = value
+                line = f"{argument} = {header}, "
+                if len(string.splitlines()[-1] + line) >= 80:
+                    string += "\n"
+                string += line
+        # remove the last space and comma pair
+        string = string[:-2]
+        return string + ")"
+
+
 
 def main():
     df = pd.DataFrame({"values": [randint(1, 10) for _ in range(31)]})
     month = Month(1, 2023, df, colormap = "viridis")
+    print(month)
 
 
 if __name__ == "__main__":

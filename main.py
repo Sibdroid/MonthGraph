@@ -106,7 +106,8 @@ class Month:
                  values: t.Optional[list[float]] = None,
                  colormap: str = "viridis",
                  font: str = "Roboto-Thin",
-                 neutral_color: str = "#EEEEEE") -> None:
+                 neutral_color: str = "#EEEEEE",
+                 first_day: str = "Monday") -> None:
         """Initializes an object of type 'Month'.
 
         Args:
@@ -138,9 +139,15 @@ class Month:
                 Defaults to 'Roboto-Thin'.
             neutral_color (str). The color used for days outside the month.
                 Defaults to '#EEEEEE', that is, a light gray.
+            first_day (str). The first day of the month, can be one of the:
+                * 'Monday', 'Mon', 'Mon.'
+                * 'Sunday', 'Sun', 'Sun.'
+                * 'Saturday', 'Sat', 'Sat.'
+                * 'Friday', 'Fri', 'Fri.'
+                Defaults to 'Monday'.
 
         Raises:
-            ValueError: in seven cases.
+            ValueError: in eight cases.
                 1) If month is given as a str, but it is not one of the
                    supported month names.
                 2) If month is given as an int, but it is outside [0; 11] range.
@@ -152,6 +159,7 @@ class Month:
                 6) If the font provided is not supported.
                 7) If the amount of colors is not equal to the amount of
                    days in the month.
+                8) If the first day of week provided is not supported.
             TypeError: in two cases.
                 1) If month is not given as an int or a str.
                 2) If year is not given as an int.
@@ -219,6 +227,29 @@ class Month:
             )
         self._starting_day, self._day_count = calendar.monthrange(self._year,
                                                                   self._month)
+        if first_day in ["Monday", "Mon", "Mon."]:
+            self._days = ["Mon.", "Tue.", "Wed.",
+                          "Thu.", "Fri.", "Sat.", "Sun."]
+        elif first_day in ["Sunday", "Sun", "Sun."]:
+            self._starting_day += 1
+            self._days = ["Sun.", "Mon.", "Tue.",
+                          "Wed.", "Thu.", "Fri.", "Sat."]
+        elif first_day in ["Saturday", "Sat", "Sat."]:
+            self._starting_day += 2
+            self._days = ["Sat.", "Sun.", "Mon.",
+                          "Tue.", "Wed.", "Thu.", "Fri."]
+        elif first_day in ["Friday", "Fri", "Fri."]:
+            self._starting_day += 3
+            self._days = ["Fri.", "Sat.", "Sun.",
+                          "Mon.", "Tue.", "Wed.", "Thu."]
+        else:
+            raise ValueError(
+                f"first_day has to be one of the following values"
+                f"\n* 'Monday', 'Mon', 'Mon.',"
+                f"\n* 'Sunday', 'Sun', 'Sun.',"
+                f"\n* 'Saturday', 'Sat', 'Sat.',"
+                f"\n* 'Friday', 'Fri', 'Fri.', not '{first_day}'"
+            )
         self._colors, self._values = get_colors_and_values(data, colors, values)
         if self._colors is None and self._values is None:
             raise ValueError(
@@ -246,6 +277,9 @@ class Month:
             if self._values is not None:
                 self._values = [None] * self._starting_day + self._values
                 self._values += [None] * (42 - len(self._values))
+            if all([i is None for i in self._colors[:7]]):
+                self._colors = self._colors[7:] + [None] * 7
+                self._values = self._values[7:] + [None] * 7
         else:
             raise ValueError(
                 f"The amount of colors ({len(self._colors)}) "
@@ -318,9 +352,8 @@ class Month:
 
     def _add_text_months(self):
         font = ImageFont.truetype(self._font_path, 30)
-        days = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
-        for day, x_coordinate in zip(days, x_coordinates):
+        for day, x_coordinate in zip(self._days, x_coordinates):
             self._draw.text((x_coordinate, 95),
                             day, "black", font=font)
 
@@ -357,8 +390,8 @@ class Month:
 
 
 def main():
-    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(31)]})
-    month = Month(1, 2023, df, colormap = "viridis")
+    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(28)]})
+    month = Month(2, 2023, df, colormap="viridis", first_day="Fri.")
     print(month)
 
 

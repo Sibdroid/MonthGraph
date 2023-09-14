@@ -5,9 +5,9 @@ A small Python library-in-progress for displaying convenient month graphs.
 Roadmap:
 - [x] Create basic visualization functionality - finished on September 2, 2023.
 - [x] Add support for colors and colormaps - finished on September 5, 2023.
-- [x] Add antations - finished on September 8, 2023.
+- [x] Add annotations - finished on September 8, 2023.
     - [x] Figure out whether to use black or white for a given color. 
-- [ ] Add support for different week formats (weeks can start on Friday, Saturday, Sunday or Monday).
+- [x] Add support for different week formats (weeks can start on Friday, Saturday, Sunday or Monday) - finished on September 14, 2023.
 - [ ] Add support for multi-month graphs (aka calendars).
 - [ ] Enable .svg format.
 
@@ -36,6 +36,20 @@ Fonts supported (those in **bold** have Regular, Bold, Italic and Bold Italic su
    </tr>
    <tr>
       <td class="headt">Arial-Black</td>
+      <td>Yes</td>
+      <td></td>
+      <td></td>
+      <td></td>
+   </tr>
+   <tr>
+      <td class="headt"><b>Georgia</b></td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+   </tr>
+   <tr>
+      <td class="headt">Impact</td>
       <td>Yes</td>
       <td></td>
       <td></td>
@@ -82,6 +96,20 @@ Fonts supported (those in **bold** have Regular, Bold, Italic and Bold Italic su
       <td>Yes</td>
       <td></td>
       <td></td>
+   </tr>
+   <tr>
+      <td class="headt"><b>Times New Roman</b></td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+   </tr>
+   <tr>
+      <td class="headt"><b>Trebuchet</b></td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
    </tr>
    <tr>
       <td class="headt"><b>Verdana</b></td>

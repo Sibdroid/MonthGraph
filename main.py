@@ -106,6 +106,8 @@ class Month:
                  values: t.Optional[list[float]] = None,
                  colormap: str = "viridis",
                  font: str = "Roboto-Thin",
+                 text_color: str = "#000000",
+                 background_color: str = "#FFFFFF",
                  neutral_color: str = "#EEEEEE",
                  first_day: str = "Monday") -> None:
         """Initializes an object of type 'Month'.
@@ -266,6 +268,8 @@ class Month:
             self._font_path = f"fonts/{font}.ttf"
         else:
             raise ValueError(f"{font} is not a supported font")
+        self._text_color = text_color
+        self._background_color = background_color
         self._neutral_color = neutral_color
         self._image = None
         self._draw = None
@@ -304,7 +308,7 @@ class Month:
             self._colors += [color]
 
     def _set_canvas(self):
-        self._image = Image.new("RGB", (780, 800), (255, 255, 255))
+        self._image = Image.new("RGB", (780, 800), self._background_color)
         self._draw = ImageDraw.Draw(self._image)
 
     def _paint(self):
@@ -355,13 +359,14 @@ class Month:
         x_coordinates = [25, 140, 250, 360, 480, 585, 690]
         for day, x_coordinate in zip(self._days, x_coordinates):
             self._draw.text((x_coordinate, 95),
-                            day, "black", font=font)
+                            day, font=font, fill=self._text_color)
 
     def _add_text_title(self):
         font = ImageFont.truetype(self._font_path, 45)
         month = MONTHS[self._month-1]
         title = f"{month} {self._year}"
-        self._draw.text((300-10*(len(month)-3), 25), title, "black", font=font)
+        self._draw.text((300-10*(len(month)-3), 25), title, font=font,
+                        fill=self._text_color)
 
     def _save(self):
         self._image.save(f"test.png")
@@ -390,8 +395,11 @@ class Month:
 
 
 def main():
-    df = pd.DataFrame({"values": [randint(1, 10) for _ in range(28)]})
-    month = Month(2, 2023, df, colormap="viridis", first_day="Fri.")
+    df = pd.DataFrame({"values": [randint(1, 100) for _ in range(30)]})
+    month = Month(9, 2023, df, colormap="viridis", font="Roboto",
+                  text_color="#EEEEEE",
+                  background_color="black",
+                  neutral_color="#222222")
     print(month)
 
 

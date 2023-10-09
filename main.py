@@ -302,10 +302,14 @@ class Month:
         self._colors = []
         slope = 1 / (max(self._values) - min(self._values))
         for value in self._values:
-            ranged_value = slope * (value - min(self._values))
-            color = self._colormap(ranged_value)
-            color = tuple([int(round(i * 255, 0)) for i in list(color)[:-1]])
-            self._colors += [color]
+            if pd.isna(value):
+                self._colors += [None]
+            else:
+                ranged_value = slope * (value - min(self._values))
+                color = self._colormap(ranged_value)
+                color = tuple([int(round(i * 255, 0)) for
+                               i in list(color)[:-1]])
+                self._colors += [color]
 
     def _set_canvas(self):
         self._image = Image.new("RGB", (780, 800), self._background_color)
@@ -337,7 +341,7 @@ class Month:
         coordinates = [10, 140]
         count = 0
         for value, color in zip(self._values, self._colors):
-            if value is not None:
+            if not pd.isna(value):
                 width, height = get_text_dimensions(font, f"{value}")
                 new_coordinates = get_text_coordinates(width, height,
                                                        coordinates[0],
@@ -395,7 +399,9 @@ class Month:
 
 
 def main():
-    df = pd.DataFrame({"values": [randint(1, 100) for _ in range(30)]})
+    values = [randint(1, 100) for _ in range(30)]
+    values[12] = None
+    df = pd.DataFrame({"values": values})
     month = Month(9, 2023, df, colormap="viridis", font="Roboto",
                   text_color="#EEEEEE",
                   background_color="black",

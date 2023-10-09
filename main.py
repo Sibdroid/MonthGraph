@@ -109,7 +109,9 @@ class Month:
                  text_color: str = "#000000",
                  background_color: str = "#FFFFFF",
                  neutral_color: str = "#EEEEEE",
-                 first_day: str = "Monday") -> None:
+                 first_day: str = "Monday",
+                 show_annotation: bool = True,
+                 annotation_precision: int = 2) -> None:
         """Initializes an object of type 'Month'.
 
         Args:
@@ -147,7 +149,9 @@ class Month:
                 * 'Saturday', 'Sat', 'Sat.'
                 * 'Friday', 'Fri', 'Fri.'
                 Defaults to 'Monday'.
-
+            show_annotation (bool). Whether to draw the annotation for the
+                cells. Defaults to True.
+            annotation_precision (int). Defaults to 2.
         Raises:
             ValueError: in eight cases.
                 1) If month is given as a str, but it is not one of the
@@ -252,6 +256,8 @@ class Month:
                 f"\n* 'Saturday', 'Sat', 'Sat.',"
                 f"\n* 'Friday', 'Fri', 'Fri.', not '{first_day}'"
             )
+        self._show_annotation = show_annotation
+        self._annotation_precision = annotation_precision
         self._colors, self._values = get_colors_and_values(data, colors, values)
         if self._colors is None and self._values is None:
             raise ValueError(
@@ -291,7 +297,7 @@ class Month:
             )
         self._set_canvas()
         self._paint()
-        if self._values is not None:
+        if self._values is not None and self._show_annotation:
             self._add_text_annotation()
         self._add_text_months()
         self._add_text_title()
@@ -342,14 +348,18 @@ class Month:
         count = 0
         for value, color in zip(self._values, self._colors):
             if not pd.isna(value):
-                width, height = get_text_dimensions(font, f"{value}")
+                if value == int(value):
+                    annot_value = f"{int(value)}"
+                else:
+                    annot_value = f"{round(value, self._annotation_precision)}"
+                width, height = get_text_dimensions(font, annot_value)
                 new_coordinates = get_text_coordinates(width, height,
                                                        coordinates[0],
                                                        coordinates[1],
                                                        100, 100)
                 self._draw.text((int(new_coordinates[0]),
                                  int(new_coordinates[1])),
-                                f"{value}", background_to_color(color),
+                                annot_value, background_to_color(color),
                                 font=font)
             coordinates[0] += 110
             count += 1
@@ -399,13 +409,13 @@ class Month:
 
 
 def main():
-    values = [randint(1, 100) for _ in range(30)]
+    values = [randint(1, 10000) / 100 for _ in range(30)]
     values[12] = None
     df = pd.DataFrame({"values": values})
     month = Month(9, 2023, df, colormap="viridis", font="Roboto",
                   text_color="#EEEEEE",
                   background_color="black",
-                  neutral_color="#222222")
+                  neutral_color="#222222", annotation_precision=3)
     print(month)
 
 
